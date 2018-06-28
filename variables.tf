@@ -48,7 +48,7 @@ variable node_count {
 
 variable kubernetes_version {
     type = "string"
-    default = "v1.9.3"
+    default = "v1.11.0"
 }
 
 variable pod_subnet {

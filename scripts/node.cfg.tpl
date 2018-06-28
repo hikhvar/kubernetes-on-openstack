@@ -113,12 +113,6 @@ write_files:
     owner: root:root
     permissions: '0644'
 -   content: |
-        [Service]
-        Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=systemd --cloud-provider=openstack --cloud-config=/etc/kubernetes/cloud-config --node-labels=node-role.kubernetes.io/node= --serialize-image-pulls=false"
-    path: /etc/systemd/system/kubelet.service.d/20-kubeadm.conf
-    owner: root:root
-    permissions: '0644'
--   content: |
         [Global]
         username="${username}"
         password="${password}"
@@ -143,4 +137,8 @@ packages:
   - ipvsadm
   - [docker-ce, 17.03.2~ce-0~ubuntu-xenial]
 runcmd:
+  - [ modprobe, ip_vs_rr ]
+  - [ modprobe, ip_vs_wrr ]
+  - [ modprobe, ip_vs_sh ]
+  - [ modprobe, ip_vs ]
   - "until kubeadm join --token=${bootstrap_token} --discovery-token-unsafe-skip-ca-verification ${api_server}:6443; do sleep 5; done"

@@ -113,12 +113,6 @@ write_files:
     owner: root:root
     permissions: '0644'
 -   content: |
-        [Service]
-        Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=systemd --cloud-provider=openstack --cloud-config=/etc/kubernetes/cloud-config --serialize-image-pulls=false"
-    path: /etc/systemd/system/kubelet.service.d/20-kubeadm.conf
-    owner: root:root
-    permissions: '0644'
--   content: |
         apiVersion: v1
         clusters:
         - cluster:
@@ -157,7 +151,7 @@ write_files:
     owner: root:root
     permissions: '0600'
 -   content: |
-        apiVersion: kubeadm.k8s.io/v1alpha1
+        apiVersion: kubeadm.k8s.io/v1alpha2
         kind: MasterConfiguration
         kubernetesVersion: ${kubernetes_version}
         cloudProvider: openstack
@@ -179,9 +173,27 @@ write_files:
         featureGates:
           CoreDNS: true
           Auditing: true
-
-        token: ${bootstrap_token}
-
+        
+        bootstrapTokens:
+        - groups:
+          - system:bootstrappers:kubeadm:default-node-token
+          token: ${bootstrap_token}
+          ttl: 24h0m0s
+          usages:
+          - signing
+          - authentication
+        
+        nodeRegistration:
+          kubeletExtraArgs:
+            cgroup-driver: systemd
+            cloud-config: /etc/kubernetes/cloud-config
+            serialize-image-pulls: "false"
+        apiServerExtraVolumes:
+          - name: cloud-config
+            hostPath: /etc/kubernetes/cloud-config
+            mountPath: /etc/kubernetes/cloud-config
+            writeable: false
+            hostPathType: File
         apiServerExtraArgs:
           cloud-config: /etc/kubernetes/cloud-config
           authentication-token-webhook-config-file: "/etc/kubernetes/pki/webhook.kubeconfig"
@@ -311,6 +323,10 @@ packages:
 # TODO create extra dir with kubernetes addons
 # The addon deployment can be moved out once we have a stable endpoint
 runcmd:
+  - [ modprobe, ip_vs_rr ]
+  - [ modprobe, ip_vs_wrr ]
+  - [ modprobe, ip_vs_sh ]
+  - [ modprobe, ip_vs ]
   - [ kubeadm, init, --config, /etc/kubernetes/kubeadm.yaml, --skip-token-print ]
   - [ mkdir, -p, /root/.kube ]
   - [ cp, -i, /etc/kubernetes/admin.conf, /root/.kube/config ]
