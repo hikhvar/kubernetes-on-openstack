@@ -112,7 +112,7 @@ disk_setup:
     overwrite: true
 
 fs_setup:
-  - label: "data"
+  - label: None
     filesystem: 'ext4'
     device: '/dev/sdb1'
     partition: 'auto'
