@@ -99,10 +99,8 @@ packages:
   - ipset
   - libseccomp2
 
-
 bootcmd:
   - sh -c 'while [ ! -b /dev/sdb ]; do sleep 1; done'
-
 
 disk_setup:
   /dev/sdb:
